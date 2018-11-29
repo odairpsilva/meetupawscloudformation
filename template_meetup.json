@@ -1,0 +1,193 @@
+{
+    "AWSTemplateFormatVersion": "2010-09-09",
+    "Description": "Template do Meetup na BP",    
+    "Resources": {
+      "MeetupVPC": {
+        "Type": "AWS::EC2::VPC",
+        "Properties": {
+          "CidrBlock": "10.0.0.0/16",
+          "EnableDnsSupport": "true",
+          "EnableDnsHostnames": "true",
+          "Tags": [
+            {
+              "Key": "Name",
+              "Value": "MeetupVPC"
+            }
+          ]
+        }
+      },
+      "MeetupIGW": {
+        "Type": "AWS::EC2::InternetGateway",
+        "Properties": {
+          "Tags": [
+            {
+              "Key": "Name",
+              "Value": "MeetupIGW"
+            }
+          ]
+        }
+      },
+      "MeetupIGWAttachment": {
+        "Type": "AWS::EC2::VPCGatewayAttachment",
+        "Properties": {
+          "VpcId": {
+            "Ref": "MeetupVPC"
+          },
+          "InternetGatewayId": {
+            "Ref": "MeetupIGW"
+          }
+        }
+      },
+      "MeetupRouteTablePub": {
+        "Type": "AWS::EC2::RouteTable",
+        "Properties": {
+          "VpcId": {
+            "Ref": "MeetupVPC"
+          },
+          "Tags": [
+            {
+              "Key": "Name",
+              "Value": "MeetupRouteTablePub"
+            }
+          ]
+        }
+      },
+      "MeetupRouteTablePubEntryIGW": {
+        "Type": "AWS::EC2::Route",
+        "DependsOn": "MeetupIGW",
+        "Properties": {
+          "RouteTableId": {
+            "Ref": "MeetupRouteTablePub"
+          },
+          "DestinationCidrBlock": "0.0.0.0/0",
+          "GatewayId": {
+            "Ref": "MeetupIGW"
+          }
+        }
+      },
+      "MeetupSubnetPubAz1": {
+        "Type": "AWS::EC2::Subnet",
+        "Properties": {
+          "CidrBlock": "10.0.2.0/24",
+          "MapPublicIpOnLaunch": "true",
+          "AvailabilityZone": "us-west-2a",
+          "VpcId": {
+            "Ref": "MeetupVPC"
+          },
+          "Tags": [
+            {
+              "Key": "Name",
+              "Value": "MeetupSubnetPubAz1"
+            }
+          ]
+        }
+      },
+      "MeetupSubnetPubAz1RouteTableAssociation": {
+        "Type": "AWS::EC2::SubnetRouteTableAssociation",
+        "Properties": {
+          "SubnetId": {
+            "Ref": "MeetupSubnetPubAz1"
+          },
+          "RouteTableId": {
+            "Ref": "MeetupRouteTablePub"
+          }
+        }
+      },
+      "MeetupPublicSecurityGroup": {
+        "Type": "AWS::EC2::SecurityGroup",
+        "Properties": {
+          "GroupDescription": "Public SecurityGroup",
+          "VpcId": {
+            "Ref": "MeetupVPC"
+          },
+          "SecurityGroupIngress": [
+            {
+              "IpProtocol": "tcp",
+              "FromPort": "80",
+              "ToPort": "80",
+              "CidrIp": "0.0.0.0/0"
+            },
+            {
+              "IpProtocol": "icmp",
+              "FromPort": "-1",
+              "ToPort": "-1",
+              "CidrIp": "0.0.0.0/0"
+            },
+            {
+              "IpProtocol": "tcp",
+              "FromPort": "443",
+              "ToPort": "443",
+              "CidrIp": "0.0.0.0/0"
+            },
+            {
+              "IpProtocol": "tcp",
+              "FromPort": "22",
+              "ToPort": "22",
+              "CidrIp": "0.0.0.0/0"
+            }
+          ]
+        }
+      },
+      "MeetupPrivateSecurityGroup": {
+        "Type": "AWS::EC2::SecurityGroup",
+        "Properties": {
+          "GroupDescription": "Private SecurityGroup",
+          "VpcId": {
+            "Ref": "MeetupVPC"
+          },
+          "SecurityGroupIngress": [
+            {
+              "IpProtocol": "tcp",
+              "FromPort": "0",
+              "ToPort": "65535",
+              "CidrIp": "10.0.0.0/16"
+            },
+            {
+              "IpProtocol": "icmp",
+              "FromPort": "-1",
+              "ToPort": "-1",
+              "CidrIp": "10.0.0.0/16"
+            }
+          ],
+          "SecurityGroupEgress": [
+            {
+              "IpProtocol": "tcp",
+              "FromPort": "0",
+              "ToPort": "65535",
+              "CidrIp": "0.0.0.0/0"
+            }
+          ]
+        }
+      }, 
+      "MeetupInstance": {
+        "Type": "AWS::EC2::Instance",
+        "Properties": {
+          "ImageId": "ami-01bbe152bf19d0289",
+          "InstanceType": "t2.nano",
+          "SubnetId": {
+            "Ref": "MeetupSubnetPubAz1"
+          },
+          "KeyName": "MeetupKeyPair",
+          "SecurityGroupIds": [
+            {
+              "Ref": "MeetupPublicSecurityGroup"
+            }
+          ],
+          "Tags": [
+            {
+              "Key": "Name",
+              "Value": "MeetupInstance"
+            }
+          ]
+        }
+      },
+      "MeetupInstanceElasticIP": {
+        "Type": "AWS::EC2::EIP",
+        "Properties": {
+          "InstanceId": {
+            "Ref": "MeetupInstance"
+          }
+        }
+      }
+    }
+  }

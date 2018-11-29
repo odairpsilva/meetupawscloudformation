@@ -6,7 +6,7 @@
     criá-la, siga os seguintes passos no console da AWS:
     1) No menu, clique em  Services > EC2
     2) Agora você deve estar numa seção chamada "EC2 Dashboard". No menu lateral, clique em Key Pairs (na seção Network e Security)
-    3) Clique em "Create Key Pair" e gere uma chave chamada "Key Pair". Lembre-se de onde irá guardá-la.
+    3) Clique em "Create Key Pair" e gere uma chave chamada "MeetupKeyPair". Lembre-se de onde irá guardá-la.
 
 Links interessantes pra complementar seus estudos:
     - https://aws.amazon.com/pt/architecture/    
